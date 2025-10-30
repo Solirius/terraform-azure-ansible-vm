@@ -175,3 +175,44 @@ When you are completely done, you can destroy ALL resources:
 ```bash
 make destroy
 ```
+
+
+
+
+# Installing Docker on the running VM
+Assuming the first part worked, you'll have a VM running, but it's "empty." The next step is to run the Ansible playbook to configure it and install Docker.
+## Step 1: Running the Provisioner
+```bash
+make provision
+```
+This single line does the following steps:
+- Fetch the VM's IP address from Terraform.
+- Wait 30 seconds for the VM to boot.
+- Run the playbook.yml file on the VM.
+- Install Docker and all prerequisites.
+
+## Step 2: Verify and connect
+Once thats done, you can verify Docker is now running 
+### SSH into the VM
+```bash
+make vm-ssh
+```
+
+### Check the Docker version
+Once inside the VM, check the version of Docker installed:
+```bash
+docker --version
+```
+
+### Run Docker without sudo
+Proves your user was correctly added to the docker group
+```bash
+docker ps
+```
+
+### Hello World Docker image
+You can also run this Docker image to make sure its all working (https://hub.docker.com/_/hello-world)
+```bash
+docker run hello-world
+```
+

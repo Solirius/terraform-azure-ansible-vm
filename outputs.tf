@@ -5,7 +5,7 @@ output "vm_public_ip" {
 
 output "ssh_command" {
   description = "Command to SSH into the VM"
-  value       = "ssh -i ~/.ssh/id_rsa ${var.admin_username}@${azurerm_public_ip.my_terraform_public_ip.ip_address}"
+  value       = "ssh -i ~/.ssh/id_rsa_azure ${var.admin_username}@${azurerm_public_ip.my_terraform_public_ip.ip_address}"
 }
 
 output "resource_group_name" {

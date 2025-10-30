@@ -1,17 +1,20 @@
-# Get the Resource Group name from terraform output
-RG_NAME := $(shell terraform output -raw resource_group_name 2>/dev/null)
 VM_NAME = "dev-vm"
+ADMIN_USER = "azureuser"
 
 
-# These words/files explicitly tell Make they're not associated with files. E.g. if you run Make init, it will run as expected even if you do have a file names init
+PRIVATE_KEY_PATH = ~/.ssh/id_rsa_azure
+
+
+# These words/files explicitly tell Make they're not associated with files.
+# E.g. if you run Make init, it will run as expected even if you do have a file names init
 .PHONY: all init validate fmt plan apply destroy vm-stop vm-start vm-ssh help
 
 all: apply
 
 
-# Initializes Terraform, pulling providers and configuring the backend.
+# Initialises Terraform, pulling providers and configuring the backend.
 init:
-	@echo "Terraform initializing..."
+	@echo "Terraform initialising..."
 	@terraform init \
 		-backend-config="resource_group_name=$(AZ_BACKEND_RG)" \
 		-backend-config="storage_account_name=$(AZ_BACKEND_STORAGE_ACCOUNT)" \
@@ -39,15 +42,30 @@ apply:
 	@echo "Applying Terraform configuration..."
 	@terraform apply -auto-approve
 
-# Destroys all infrastructure managed by this configuration.
-# -auto-approve skips the 'yes' prompt.
+# Destroys all infrastructure managed by this configuration. -auto-approve skips the 'yes' prompt.
 destroy:
 	@echo "Destroying all infrastructure..."
 	@terraform destroy -auto-approve
 
 
+provision:
+	@echo "Provisioning VM with Ansible..."
+	@echo "Fetching VM IP address from Terraform..."
+	# This is the fix:
+	# We export the variable AND use it on the same logical line.
+	# The '&&' ensures we only proceed if the export succeeds.
+	@export VM_IP=$$(terraform output -raw vm_public_ip) && \
+	echo "VM IP is $$VM_IP. Waiting 30 seconds for boot..." && \
+	sleep 30 && \
+	ansible-playbook \
+		-i "$$VM_IP," \
+		--private-key $(PRIVATE_KEY_PATH) \
+		-u $(ADMIN_USER) \
+		--ssh-common-args='-o StrictHostKeyChecking=no' \
+		playbook.yml
 
-# --- VM Power Management (Uses Azure CLI) ---
+
+# VM Power Management
 
 # Stops (de-allocates) the VM to save money. Infrastructure remains.
 vm-stop:

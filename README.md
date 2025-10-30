@@ -146,7 +146,14 @@ make init
 make apply
 ```
 
-Your VM should be running, hae a look in Azure
+Your VM should be running, have a look in Azure
+
+### If you run into resource provider registration errors
+
+You can simply register the provider through the Azure command line. The example below will register the Microsft.Network resource provider.
+```bash
+az provider register --namespace Microsoft.Network
+```
 
 ### Step 7: Connect and Clean Up
 You can SSH into it:

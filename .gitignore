@@ -10,3 +10,6 @@ secrets.auto.tfvars
 
 # Local environment files
 .terraform.lock.hcl
+
+
+

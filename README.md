@@ -147,7 +147,14 @@ make init
 make apply
 ```
 
-Your VM should be running, hae a look in Azure
+Your VM should be running, have a look in Azure
+
+### If you run into resource provider registration errors
+
+You can simply register the provider through the Azure command line. The example below will register the Microsft.Network resource provider.
+```bash
+az provider register --namespace Microsoft.Network
+```
 
 ### Step 7: Connect and Clean Up
 You can SSH into it:
@@ -169,8 +176,6 @@ When you are completely done, you can destroy ALL resources:
 ```bash
 make destroy
 ```
-
-
 
 # Installing Docker on the running VM
 Assuming the first part worked, you'll have a VM running, but it's "empty." The next step is to run the Ansible playbook to configure it and install Docker.
@@ -207,4 +212,4 @@ docker ps
 You can also run this Docker image to make sure its all working (https://hub.docker.com/_/hello-world)
 ```bash
 docker run hello-world
-```
+

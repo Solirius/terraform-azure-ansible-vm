@@ -31,5 +31,4 @@ variable "my_public_ip" {
 variable "deploy_public_key" {
   type        = string
   description = "Public SSH key for GitHub Actions to deploy with"
-  sensitive   = true
 }

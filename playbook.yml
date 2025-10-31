@@ -4,7 +4,16 @@
 - name: Configure Docker on Terraform VM
   hosts: all
   become: true
+  gather_facts: false # No need to gather facts for this simple task
   tasks:
+    - name: Wait for SSH port
+      ansible.builtin.wait_for:
+        host: "{{ inventory_hostname }}"
+        port: 22
+        delay: 10         # Initial delay before starting to poll
+        timeout: 300      # Wait for a maximum of 5 minutes
+      delegate_to: localhost
+      become: false
 
     # ------------------------------------------------------------
     # Use apt module to install 3 packages
@@ -21,6 +30,12 @@
         update_cache: true
         state: present
 
+    - name: "1.5: Upgrade all system packages"
+      ansible.builtin.apt:
+        # 'dist' is the same as `apt-get dist-upgrade`
+        # It ensures all core libraries (like gnutls) are patched.
+        upgrade: dist
+        update_cache: yes
 
     # ------------------------------------------------------------
     # Create a directory for Docker's GPG key
@@ -117,6 +132,14 @@
         state: started
         enabled: true
 
+    # ------------------------------------------------------------
+    # DEBUG TASK: Verify the deploy key variable
+    # ------------------------------------------------------------
+    - name: "DEBUG: Check the deploy key variable"
+      ansible.builtin.debug:
+        var: deploy_public_key_var
+      failed_when: deploy_public_key_var is not defined or deploy_public_key_var | length == 0
+      # This will make the playbook fail here with a clear message if the variable is empty
 
     # ------------------------------------------------------------
     # TASK 10: Add the GitHub Actions deploy key
@@ -127,8 +150,7 @@
         user: "{{ ansible_user }}"
         state: present
         # This key comes from a new Terraform variable
-        key: "{{ lookup('vars', 'deploy_public_key_var') }}"
-
+        key: "{{ deploy_public_key_var }}"
 
     # ------------------------------------------------------------
     # TASK 11: Install the Azure CLI

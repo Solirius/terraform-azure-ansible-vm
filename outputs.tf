@@ -22,3 +22,8 @@ output "acr_name" {
   description = "The name of the Azure Container Registry"
   value       = azurerm_container_registry.my_acr.name
 }
+
+output "deploy_public_key" {
+  description = "The public key for GitHub Actions deployment"
+  value       = var.deploy_public_key
+}

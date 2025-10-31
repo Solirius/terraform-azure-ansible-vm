@@ -60,9 +60,8 @@ provision:
 		--private-key $(PRIVATE_KEY_PATH) \
 		-u $(ADMIN_USER) \
 		--ssh-common-args='-o StrictHostKeyChecking=no' \
-		-e "deploy_public_key_var=$$DEPLOY_KEY" \
+		-e "deploy_public_key_var=\"$$DEPLOY_KEY\"" \
 		playbook.yml
-
 
 
 # VM Power Management

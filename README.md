@@ -8,9 +8,10 @@ Before you start, you should have the following tools installed:
 1.  **Terraform** (~> 1.5)
 2.  **Azure Account** (create free account with $200 credit)
 3.  **Azure CLI** (`az`)
-4.  **make**
-5.  An **SSH Key Pair** (usually at `~/.ssh/id_rsa` and `~/.ssh/id_rsa.pub`)
-6.  **(Optional for `make vm-ssh`)** `jq` (a command-line JSON processor)
+4.  **Ansible** (for provisioning the VM)
+5.  **make**
+6.  An **SSH Key Pair** (usually at `~/.ssh/id_rsa` and `~/.ssh/id_rsa.pub`)
+7.  **(Optional for `make vm-ssh`)** `jq` (a command-line JSON processor)
 
 ## 1. Setup & Authentication
 
@@ -167,4 +168,43 @@ make vm-start
 When you are completely done, you can destroy ALL resources:
 ```bash
 make destroy
+```
+
+
+
+# Installing Docker on the running VM
+Assuming the first part worked, you'll have a VM running, but it's "empty." The next step is to run the Ansible playbook to configure it and install Docker.
+## Step 1: Running the Provisioner
+```bash
+make provision
+```
+This single line does the following steps:
+- Fetch the VM's IP address from Terraform.
+- Wait 30 seconds for the VM to boot.
+- Run the playbook.yml file on the VM.
+- Install Docker and all prerequisites.
+
+## Step 2: Verify and connect
+Once thats done, you can verify Docker is now running 
+### SSH into the VM
+```bash
+make vm-ssh
+```
+
+### Check the Docker version
+Once inside the VM, check the version of Docker installed:
+```bash
+docker --version
+```
+
+### Run Docker without sudo
+Proves your user was correctly added to the docker group
+```bash
+docker ps
+```
+
+### Hello World Docker image
+You can also run this Docker image to make sure its all working (https://hub.docker.com/_/hello-world)
+```bash
+docker run hello-world
 ```

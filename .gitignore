@@ -1,0 +1,12 @@
+# Terraform-specific files
+*.tfstate
+*.tfstate.backup
+.terraform/
+crash.log
+
+# Secret variable files
+*.auto.tfvars
+secrets.auto.tfvars
+
+# Local environment files
+.terraform.lock.hcl

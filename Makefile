@@ -51,10 +51,8 @@ destroy:
 provision:
 	@echo "Provisioning VM with Ansible..."
 	@echo "Fetching VM IP address from Terraform..."
-	# This is the fix:
-	# We export the variable AND use it on the same logical line.
-	# The '&&' ensures we only proceed if the export succeeds.
 	@export VM_IP=$$(terraform output -raw vm_public_ip) && \
+	export DEPLOY_KEY=$$(terraform output -raw deploy_public_key) && \
 	echo "VM IP is $$VM_IP. Waiting 30 seconds for boot..." && \
 	sleep 30 && \
 	ansible-playbook \
@@ -62,11 +60,12 @@ provision:
 		--private-key $(PRIVATE_KEY_PATH) \
 		-u $(ADMIN_USER) \
 		--ssh-common-args='-o StrictHostKeyChecking=no' \
+		-e "deploy_public_key_var=$$DEPLOY_KEY" \
 		playbook.yml
 
 
-# VM Power Management
 
+# VM Power Management
 # Stops (de-allocates) the VM to save money. Infrastructure remains.
 vm-stop:
 	@echo "Stopping (de-allocating) VM: $(VM_NAME) in RG: $(RG_NAME)..."

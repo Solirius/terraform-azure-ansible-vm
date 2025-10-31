@@ -27,3 +27,9 @@ variable "my_public_ip" {
   sensitive   = true
   description = "Your local public IP. Used to lock down SSH access."
 }
+
+variable "deploy_public_key" {
+  type        = string
+  description = "Public SSH key for GitHub Actions to deploy with"
+  sensitive   = true
+}

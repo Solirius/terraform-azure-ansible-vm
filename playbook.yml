@@ -117,6 +117,31 @@
         state: started
         enabled: true
 
+
+    # ------------------------------------------------------------
+    # TASK 10: Add the GitHub Actions deploy key
+    # ------------------------------------------------------------
+    - name: "10: Add GitHub Actions deploy key"
+      # This module securely adds the public key to the user's authorised_keys file
+      ansible.posix.authorized_key:
+        user: "{{ ansible_user }}"
+        state: present
+        # This key comes from a new Terraform variable
+        key: "{{ lookup('vars', 'deploy_public_key_var') }}"
+
+
+    # ------------------------------------------------------------
+    # TASK 11: Install the Azure CLI
+    # ------------------------------------------------------------
+    - name: "11: Install Azure CLI"
+      ansible.builtin.shell:
+        # This is the official Microsoft install script
+        cmd: curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+        # This makes the task idempotent (it won't run if az is already installed)
+        creates: /usr/bin/az
+
+
+
   # ------------------------------------------------------------
   # These only run if "notified" by a task
   # ------------------------------------------------------------

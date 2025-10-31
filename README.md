@@ -8,9 +8,10 @@ Before you start, you should have the following tools installed:
 1.  **Terraform** (~> 1.5)
 2.  **Azure Account** (create free account with $200 credit)
 3.  **Azure CLI** (`az`)
-4.  **make**
-5.  An **SSH Key Pair** (usually at `~/.ssh/id_rsa` and `~/.ssh/id_rsa.pub`)
-6.  **(Optional for `make vm-ssh`)** `jq` (a command-line JSON processor)
+4.  **Ansible** (for provisioning the VM)
+5.  **make**
+6.  An **SSH Key Pair** (usually at `~/.ssh/id_rsa` and `~/.ssh/id_rsa.pub`)
+7.  **(Optional for `make vm-ssh`)** `jq` (a command-line JSON processor)
 
 ## 1. Setup & Authentication
 
@@ -176,9 +177,6 @@ When you are completely done, you can destroy ALL resources:
 make destroy
 ```
 
-
-
-
 # Installing Docker on the running VM
 Assuming the first part worked, you'll have a VM running, but it's "empty." The next step is to run the Ansible playbook to configure it and install Docker.
 ## Step 1: Running the Provisioner
@@ -214,5 +212,4 @@ docker ps
 You can also run this Docker image to make sure its all working (https://hub.docker.com/_/hello-world)
 ```bash
 docker run hello-world
-```
 

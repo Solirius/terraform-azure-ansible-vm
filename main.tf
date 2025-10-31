@@ -86,7 +86,7 @@ resource "azurerm_network_interface_security_group_association" "my_nsg_nic_asso
 
 # Create Linux VM
 resource "azurerm_linux_virtual_machine" "my_vm_machine" {
-    # This name should match the vm name in the MAKEFILE
+# This name should match the vm name in the MAKEFILE
   name                  = "dev-vm"
   resource_group_name   = azurerm_resource_group.rg.name
   location              = azurerm_resource_group.rg.location
@@ -96,6 +96,10 @@ resource "azurerm_linux_virtual_machine" "my_vm_machine" {
   network_interface_ids = [
     azurerm_network_interface.my_terraform_nic.id,
   ]
+
+  identity {
+    type = "SystemAssigned"
+  }
 
   # SSK Key authentication
   admin_ssh_key {
@@ -122,4 +126,33 @@ resource "azurerm_linux_virtual_machine" "my_vm_machine" {
 resource "random_pet" "prefix" {
   prefix = var.prefix
   length = 1
+}
+
+resource "random_string" "acr_name" {
+  length  = 5
+  lower   = true
+  numeric = false
+  special = false
+  upper   = false
+}
+
+resource "azurerm_container_registry" "my_acr" {
+  name                = "${random_string.acr_name.result}registry" 
+  resource_group_name = azurerm_resource_group.rg.name
+  location            = azurerm_resource_group.rg.location
+  sku                 = "Standard"
+  admin_enabled       = false 
+}
+
+data "azurerm_client_config" "current" {}
+
+resource "azurerm_role_assignment" "acr_push_role" {
+  # the unique ID of the Service Principal
+  principal_id         = data.azurerm_client_config.current.object_id
+  
+  # Scope is the ACR we just created
+  scope = azurerm_container_registry.my_acr.id
+  
+  # AcrPush allows pushing images (but not deleting or pulling)
+  role_definition_name = "AcrPull"
 }

@@ -9,6 +9,11 @@ terraform {
         source = "hashicorp/azurerm"
         version = "~> 3.117"
       }
+
+      github = {
+        source  = "integrations/github"
+        version = "~> 6.0" # Use a modern version
+    }
     }
 
     # Configure backend to store the states remotely in Azure. 
@@ -21,4 +26,7 @@ provider "azurerm" {
   features {}
 
   skip_provider_registration = true
+}
+
+provider "github" {
 }

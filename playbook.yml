@@ -133,16 +133,7 @@
         enabled: true
 
     # ------------------------------------------------------------
-    # DEBUG TASK: Verify the deploy key variable
-    # ------------------------------------------------------------
-    - name: "DEBUG: Check the deploy key variable"
-      ansible.builtin.debug:
-        var: deploy_public_key_var
-      failed_when: deploy_public_key_var is not defined or deploy_public_key_var | length == 0
-      # This will make the playbook fail here with a clear message if the variable is empty
-
-    # ------------------------------------------------------------
-    # TASK 10: Add the GitHub Actions deploy key
+    # Add the GitHub Actions deploy key
     # ------------------------------------------------------------
     - name: "10: Add GitHub Actions deploy key"
       # This module securely adds the public key to the user's authorised_keys file
@@ -153,7 +144,7 @@
         key: "{{ deploy_public_key_var }}"
 
     # ------------------------------------------------------------
-    # TASK 11: Install the Azure CLI
+    # Install the Azure CLI
     # ------------------------------------------------------------
     - name: "11: Install Azure CLI"
       ansible.builtin.shell:

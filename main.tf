@@ -60,7 +60,7 @@ resource "azurerm_network_security_group" "my_terraform_nsg" {
     source_address_prefix      = "*"
     destination_address_prefix = "*"
   }
-  
+
 }
 
 # Create virtual NIC for VM
@@ -93,14 +93,14 @@ resource "azurerm_linux_virtual_machine" "my_vm_machine" {
   location              = azurerm_resource_group.rg.location
   size                  = "Standard_B1s" 
   admin_username        = var.admin_username
-  
-  network_interface_ids = [
-    azurerm_network_interface.my_terraform_nic.id,
-  ]
 
   identity {
     type = "SystemAssigned"
   }
+  
+  network_interface_ids = [
+    azurerm_network_interface.my_terraform_nic.id,
+  ]
 
   # SSK Key authentication
   admin_ssh_key {
@@ -147,13 +147,29 @@ resource "azurerm_container_registry" "my_acr" {
 
 data "azurerm_client_config" "current" {}
 
-resource "azurerm_role_assignment" "acr_push_role" {
-  # the unique ID of the Service Principal
-  principal_id         = data.azurerm_client_config.current.object_id
-  
-  # Scope is the ACR we just created
-  scope = azurerm_container_registry.my_acr.id
-  
-  # AcrPush allows pushing images (but not deleting or pulling)
+
+resource "azurerm_role_assignment" "acr_pull_role_for_vm" {
+  principal_id         = azurerm_linux_virtual_machine.my_vm_machine.identity[0].principal_id
+  scope                = azurerm_container_registry.my_acr.id
   role_definition_name = "AcrPull"
+}
+
+
+
+resource "github_actions_secret" "vm_ip" {
+  repository       = "bid-assist"
+  secret_name      = "VM_IP"
+  plaintext_value  = azurerm_public_ip.my_terraform_public_ip.ip_address
+}
+
+resource "github_actions_secret" "acr_name" {
+  repository       = "bid-assist"
+  secret_name      = "ACR_NAME"
+  plaintext_value  = azurerm_container_registry.my_acr.name
+}
+
+resource "github_actions_secret" "acr_login_server" {
+  repository       = "bid-assist"
+  secret_name      = "ACR_LOGIN_SERVER"
+  plaintext_value  = azurerm_container_registry.my_acr.login_server
 }

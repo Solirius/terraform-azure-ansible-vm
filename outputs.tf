@@ -27,3 +27,8 @@ output "deploy_public_key" {
   description = "The public key for GitHub Actions deployment"
   value       = var.deploy_public_key
 }
+
+output "key_vault_uri" {
+  description = "The URI of the new Key Vault"
+  value       = azurerm_key_vault.my_key_vault.vault_uri
+}

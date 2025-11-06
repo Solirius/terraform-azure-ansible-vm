@@ -99,7 +99,7 @@
     # ------------------------------------------------------------
     - name: "7: Install Docker Engine"
       ansible.builtin.apt:
-      # Installs Docker Community Engine, Command Line Interface and the core enginer containerd
+        # Installs Docker Community Engine, Command Line Interface and the core enginer containerd
         name:
           - docker-ce
           - docker-ce-cli

@@ -173,3 +173,44 @@ resource "github_actions_secret" "acr_login_server" {
   secret_name      = "ACR_LOGIN_SERVER"
   plaintext_value  = azurerm_container_registry.my_acr.login_server
 }
+
+
+# Create the Azure Key Vault
+resource "azurerm_key_vault" "my_key_vault" {
+  name                = "kv-${random_pet.prefix.id}"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  tenant_id           = data.azurerm_client_config.current.tenant_id
+  sku_name            = "standard"
+  
+  # Allow your Service Principal to manage everything
+  access_policy {
+    tenant_id = data.azurerm_client_config.current.tenant_id
+    object_id = data.azurerm_client_config.current.object_id
+    
+    # Permissions for you to manage keys, secrets, and certificates
+    key_permissions         = ["Get", "List", "Create", "Delete", "Purge"]
+    secret_permissions      = ["Get", "List", "Set", "Delete", "Purge"]
+    certificate_permissions = ["Get", "List", "Create", "Delete", "Purge"]
+  }
+  
+  # Allow VM's Managed Identity to READ secrets
+  access_policy {
+    tenant_id = data.azurerm_client_config.current.tenant_id
+    object_id = azurerm_linux_virtual_machine.my_vm_machine.identity[0].principal_id
+    
+    # The only permisions the VM needs to read secrets at runtime
+    secret_permissions = ["Get", "List"]
+  }
+}
+
+resource "azurerm_key_vault_secret" "db_password" {
+  name         = "DATABASE-PASSWORD"
+  value        = "password" # From compose.yml environment
+  key_vault_id = azurerm_key_vault.my_key_vault.id
+  
+  # This ensures the VM's access policy is set *before* we add the secret
+  depends_on = [
+    azurerm_role_assignment.acr_pull_role_for_vm
+  ]
+}

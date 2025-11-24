@@ -16,9 +16,6 @@ terraform {
     }
     }
 
-    # Configure backend to store the states remotely in Azure. 
-    # With the Azure Storage Account Name, inside the Resource Group, in a specific container, with a sepcific filename
-    backend "azurerm" {}
 }
 
 # This initialises the AzureRM provider. Features block is empty but is required, even if no special features are configured 

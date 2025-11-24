@@ -1,56 +1,31 @@
 ---
-# This playbook configures the VM created with Terraform to install Docker
-
 - name: Configure Docker on Terraform VM
   hosts: all
   become: true
-  gather_facts: false # No need to gather facts for this simple task
-  tasks:
-    - name: Wait for SSH port
-      ansible.builtin.wait_for:
-        host: "{{ inventory_hostname }}"
-        port: 22
-        delay: 10         # Initial delay before starting to poll
-        timeout: 300      # Wait for a maximum of 5 minutes
-      delegate_to: localhost
-      become: false
+  gather_facts: true
 
-    # ------------------------------------------------------------
-    # Use apt module to install 3 packages
-    # ------------------------------------------------------------
+  tasks:
     - name: "1: Update apt cache and install preqrequistes"
       ansible.builtin.apt:
         name:
-          # Lets VM trust HTTPS websites, like Docker
           - 'ca-certificates'
-          # Tool to download files (needed to get Docker's security key)
           - 'curl'
-          # Tool to handle the GNU Privacy Guard (GPG) encryption key
           - 'gnupg'
         update_cache: true
         state: present
 
     - name: "1.5: Upgrade all system packages"
       ansible.builtin.apt:
-        # 'dist' is the same as `apt-get dist-upgrade`
-        # It ensures all core libraries (like gnutls) are patched.
         upgrade: dist
-        update_cache: yes
+        update_cache: true
 
-    # ------------------------------------------------------------
-    # Create a directory for Docker's GPG key
-    # ------------------------------------------------------------
+
     - name: "2: Create directory for Docker's GPG key"
       ansible.builtin.file:
-        # Secure directory to store GPG keys for apt repositories
         path: '/etc/apt/keyrings'
         state: directory
-        # 0755 means the owner can read, write and execute. Groups and others can read and execute (but not write)
         mode: '0755'
 
-    # ------------------------------------------------------------
-    # Create a directory for Docker's GPG key
-    # ------------------------------------------------------------
     - name: "3: Download Docker's GPG key"
       ansible.builtin.get_url:
         url: "https://download.docker.com/linux/ubuntu/gpg"
@@ -58,19 +33,11 @@
         mode: '0644'
         force: true
 
-
-    # ------------------------------------------------------------
-    # Set permissions for GPG key
-    # ------------------------------------------------------------
     - name: "4: Set correct permissions for the GPG key"
       ansible.builtin.file:
         path: '/etc/apt/keyrings/docker.asc'
-        # 0644 means the owner can read and write. Groups and others can only read
         mode: '0644'
 
-    # ------------------------------------------------------------
-    # Add the Docker repository (THE FIX)
-    # ------------------------------------------------------------
     - name: "5: Add the Docker repository using shell"
       ansible.builtin.shell:
         cmd: |
@@ -84,22 +51,12 @@
         executable: /bin/bash
         creates: /etc/apt/sources.list.d/docker.list
 
-
-    # ------------------------------------------------------------
-    # Update apt again after adding the new repo
-    # ------------------------------------------------------------
     - name: "6: Update apt cache (after adding new repo)"
       ansible.builtin.apt:
-        # Runs apt-get update because we added a new repository
         update_cache: true
 
-
-    # ------------------------------------------------------------
-    # Install the Docker software
-    # ------------------------------------------------------------
     - name: "7: Install Docker Engine"
       ansible.builtin.apt:
-        # Installs Docker Community Engine, Command Line Interface and the core enginer containerd
         name:
           - docker-ce
           - docker-ce-cli
@@ -108,60 +65,14 @@
           - docker-compose-plugin
         state: present
 
-
-    # ------------------------------------------------------------
-    # Add your login user to the 'docker' group
-    # ------------------------------------------------------------
     - name: "8: Add user to the 'docker' group"
       ansible.builtin.user:
-        # Uses the user currently SSH'd in as for the login. One root users should be able to run Docker commands
         name: "{{ ansible_user }}"
         groups: docker
         append: true
-      notify:
-        # Points to handler. Restart ssh at the end of the playbook because group changes don't take effect until the user logs out and back in
-        - Restart ssh
 
-
-    # ------------------------------------------------------------
-    # Start and enable the Docker service
-    # ------------------------------------------------------------
     - name: "9: Start and enable Docker service"
       ansible.builtin.service:
         name: docker
         state: started
         enabled: true
-
-    # ------------------------------------------------------------
-    # Add the GitHub Actions deploy key
-    # ------------------------------------------------------------
-    - name: "10: Add GitHub Actions deploy key"
-      # This module securely adds the public key to the user's authorised_keys file
-      ansible.posix.authorized_key:
-        user: "{{ ansible_user }}"
-        state: present
-        # This key comes from a new Terraform variable
-        key: "{{ deploy_public_key_var }}"
-
-    # ------------------------------------------------------------
-    # Install the Azure CLI
-    # ------------------------------------------------------------
-    - name: "11: Install Azure CLI"
-      ansible.builtin.shell:
-        # This is the official Microsoft install script
-        cmd: curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
-        # This makes the task idempotent (it won't run if az is already installed)
-        creates: /usr/bin/az
-
-
-
-  # ------------------------------------------------------------
-  # These only run if "notified" by a task
-  # ------------------------------------------------------------
-  handlers:
-    # This task will only run if change is made (i.e., added the user to the group).
-    # If you run the playbook a second time, it won't do anything, and this handler won't be triggered.
-    - name: "Restart ssh"
-      ansible.builtin.service:
-        name: sshd
-        state: restarted
